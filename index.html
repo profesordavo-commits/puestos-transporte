@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asignación de puestos</title>
+<style>
+  :root { --verde:#1d9e75; --verde-bg:#e1f5ee; --gris:#d3d1c7; --gris-t:#5f5e5a; --txt:#222; --borde:#c9c7bd; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; margin:0; background:#f6f5f1; color:var(--txt); }
+  header { padding:16px; text-align:center; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  header p { margin:0; font-size:14px; color:#666; }
+  .modo { display:inline-block; margin-top:8px; font-size:12px; background:#faeeda; color:#633806; padding:3px 10px; border-radius:99px; }
+  .bus { max-width:340px; margin:12px auto; background:#fff; border:2px solid var(--borde); border-radius:28px; padding:16px 14px 18px; }
+  .frente { text-align:center; font-size:12px; color:#888; margin-bottom:8px; }
+  .fila { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:6px; }
+  .pieza { font-size:11px; color:#777; border:1px dashed var(--borde); border-radius:8px; display:flex; align-items:center; justify-content:center; height:40px; }
+  .puerta { grid-column:4 / 6; }
+  .silla { height:40px; border-radius:8px; font-weight:600; font-size:15px; cursor:pointer; border:1px solid var(--verde); background:var(--verde-bg); color:#085041; }
+  .silla.ocupada { background:var(--gris); border-color:#b4b2a9; color:var(--gris-t); }
+  .silla:active { transform:scale(.96); }
+  .leyenda { display:flex; gap:16px; justify-content:center; font-size:13px; margin:10px 0; }
+  .leyenda i { display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:middle; margin-right:5px; }
+  .contador { text-align:center; font-size:14px; margin-bottom:8px; }
+  .acciones { text-align:center; padding-bottom:30px; }
+  button.link { background:none; border:none; color:#185fa5; text-decoration:underline; cursor:pointer; font-size:14px; }
+  dialog { border:none; border-radius:14px; padding:20px; width:min(92vw,340px); box-shadow:0 8px 30px rgba(0,0,0,.25); }
+  dialog::backdrop { background:rgba(0,0,0,.45); }
+  dialog h2 { margin:0 0 12px; font-size:18px; }
+  label { display:block; font-size:13px; margin:10px 0 4px; color:#555; }
+  input { width:100%; padding:10px; font-size:16px; border:1px solid var(--borde); border-radius:8px; }
+  .btns { display:flex; gap:8px; margin-top:16px; }
+  .btns button { flex:1; padding:10px; font-size:15px; border-radius:8px; border:1px solid var(--borde); background:#fff; cursor:pointer; }
+  .btns button.ok { background:var(--verde); color:#fff; border-color:var(--verde); }
+  .btns button:disabled { opacity:.5; }
+  .msg { font-size:13px; margin-top:10px; min-height:18px; color:#a32d2d; }
+  .msg.bien { color:#0f6e56; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+  td, th { border-bottom:1px solid #eee; padding:5px 4px; text-align:left; }
+  .admin-box { max-height:60vh; overflow:auto; }
+  dialog.ancho { width:min(94vw,460px); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Asignación de puestos</h1>
+  <p>Toca una silla libre e ingresa tu nombre y tu código personal.</p>
+  <span class="modo" id="modo" hidden>Modo de prueba: los datos solo se guardan en este dispositivo</span>
+</header>
+
+<div class="contador" id="contador"></div>
+<div class="bus" id="bus"></div>
+<div class="leyenda">
+  <span><i style="background:var(--verde-bg);border:1px solid var(--verde)"></i>Libre</span>
+  <span><i style="background:var(--gris);border:1px solid #b4b2a9"></i>Ocupada</span>
+</div>
+<div class="acciones"><button class="link" id="btnAdmin">Administrador</button></div>
+
+<dialog id="dlgSilla">
+  <h2 id="tituloSilla"></h2>
+  <div id="formSilla">
+    <label for="nombre">Nombre y apellido</label>
+    <input id="nombre" autocomplete="off">
+    <label for="codigo">Código de desbloqueo</label>
+    <input id="codigo" autocomplete="off" autocapitalize="characters">
+  </div>
+  <div class="msg" id="msgSilla"></div>
+  <div class="btns">
+    <button id="cancelarSilla">Cerrar</button>
+    <button class="ok" id="okSilla">Asignar</button>
+  </div>
+</dialog>
+
+<dialog id="dlgAdmin" class="ancho">
+  <h2>Administrador</h2>
+  <div id="loginAdmin">
+    <label for="claveAdmin">Clave de administrador</label>
+    <input id="claveAdmin" type="password">
+    <div class="msg" id="msgAdmin"></div>
+    <div class="btns">
+      <button id="cerrarAdmin1">Cerrar</button>
+      <button class="ok" id="entrarAdmin">Entrar</button>
+    </div>
+  </div>
+  <div id="panelAdmin" hidden>
+    <p style="font-size:13px;color:#666;margin:0">Códigos de cada silla. Envía a cada persona solo el suyo.</p>
+    <div class="admin-box"><table id="tablaAdmin"></table></div>
+    <div class="btns">
+      <button id="copiarCodigos">Copiar lista</button>
+      <button id="cerrarAdmin2">Cerrar</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* ============ CONFIGURACIÓN ============
+   Pega aquí la URL de tu Apps Script publicado (termina en /exec).
+   Si la dejas vacía, la página funciona en MODO DE PRUEBA (solo en este navegador):
+   código de silla = "demo", clave de administrador = "admin". */
+const API_URL = "https://script.google.com/macros/s/AKfycbz_ZWnPbwmvd2cnqlWtaX7LdDsgfJrVj6ax4kRlUs4fkwo6NXgRXSOa7P103p7a1Ha-/exec";
+const TITULO = "Asignación de puestos";
+/* ======================================= */
+
+const FILAS = 8, TOTAL = 37;
+let asignados = {};
+let claveAdmin = null;
+let sillaActual = null;
+
+/* ---------- Capa de datos ---------- */
+async function api(payload) {
+  if (API_URL) {
+    const r = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+    return r.json();
+  }
+  return demo(payload);
+}
+function demo(p) {
+  const leer = () => JSON.parse(localStorage.getItem("puestos_demo") || "{}");
+  const guardar = d => localStorage.setItem("puestos_demo", JSON.stringify(d));
+  const d = leer();
+  if (p.action === "state") return { ok: true, assigned: d };
+  if (p.action === "claim") {
+    if (d[p.seat]) return { ok: false, error: "Esa silla ya fue asignada." };
+    if (String(p.code).trim().toLowerCase() !== "demo") return { ok: false, error: "Código incorrecto." };
+    d[p.seat] = p.name; guardar(d); return { ok: true, assigned: d };
+  }
+  if (p.adminKey !== "admin") return { ok: false, error: "Clave incorrecta." };
+  if (p.action === "codes") {
+    const codes = {}; for (let i = 1; i <= TOTAL; i++) codes[i] = "demo";
+    return { ok: true, codes, assigned: d };
+  }
+  if (p.action === "release") { delete d[p.seat]; guardar(d); return { ok: true, assigned: d }; }
+  return { ok: false, error: "Acción no válida." };
+}
+
+/* ---------- Dibujo del bus ---------- */
+function dibujar() {
+  const bus = document.getElementById("bus");
+  let h = '<div class="frente">Frente</div>';
+  h += '<div class="fila"><div class="pieza">Cond.</div><div></div><div></div><div class="pieza puerta">Puerta</div></div>';
+  const silla = n => `<button class="silla ${asignados[n] ? "ocupada" : ""}" data-n="${n}">${n}</button>`;
+  for (let r = 0; r < FILAS; r++) {
+    const b = r * 4;
+    h += `<div class="fila">${silla(b+1)}${silla(b+2)}<div></div>${silla(b+3)}${silla(b+4)}</div>`;
+  }
+  h += `<div class="fila">${[33,34,35,36,37].map(silla).join("")}</div>`;
+  bus.innerHTML = h;
+  bus.querySelectorAll(".silla").forEach(b => b.onclick = () => abrirSilla(+b.dataset.n));
+  const ocup = Object.keys(asignados).length;
+  document.getElementById("contador").textContent = `${ocup} de ${TOTAL} sillas asignadas · ${TOTAL - ocup} libres`;
+}
+
+/* ---------- Diálogo de silla ---------- */
+const $ = id => document.getElementById(id);
+function abrirSilla(n) {
+  sillaActual = n;
+  $("tituloSilla").textContent = "Silla " + n;
+  $("msgSilla").textContent = ""; $("msgSilla").className = "msg";
+  $("nombre").value = ""; $("codigo").value = "";
+  const ocupada = !!asignados[n];
+  $("formSilla").hidden = ocupada;
+  $("okSilla").hidden = ocupada;
+  if (ocupada) $("msgSilla").textContent = "Asignada a: " + asignados[n];
+  $("dlgSilla").showModal();
+}
+$("cancelarSilla").onclick = () => $("dlgSilla").close();
+$("okSilla").onclick = async () => {
+  const name = $("nombre").value.trim(), code = $("codigo").value.trim();
+  const msg = $("msgSilla");
+  if (name.length < 3) { msg.textContent = "Escribe tu nombre y apellido."; return; }
+  if (!code) { msg.textContent = "Ingresa tu código."; return; }
+  $("okSilla").disabled = true; msg.className = "msg"; msg.textContent = "Verificando...";
+  try {
+    const r = await api({ action: "claim", seat: sillaActual, name, code });
+    if (r.ok) {
+      asignados = r.assigned; dibujar();
+      msg.className = "msg bien"; msg.textContent = "¡Listo! Silla " + sillaActual + " asignada a " + name + ".";
+      setTimeout(() => $("dlgSilla").close(), 1400);
+    } else { msg.textContent = r.error || "No se pudo asignar."; if (r.assigned) { asignados = r.assigned; dibujar(); } }
+  } catch (e) { msg.textContent = "Error de conexión. Intenta de nuevo."; }
+  $("okSilla").disabled = false;
+};
+
+/* ---------- Administrador ---------- */
+$("btnAdmin").onclick = () => {
+  $("loginAdmin").hidden = false; $("panelAdmin").hidden = true;
+  $("claveAdmin").value = ""; $("msgAdmin").textContent = "";
+  $("dlgAdmin").showModal();
+};
+$("cerrarAdmin1").onclick = $("cerrarAdmin2").onclick = () => { claveAdmin = null; $("dlgAdmin").close(); };
+$("entrarAdmin").onclick = async () => {
+  const k = $("claveAdmin").value;
+  try {
+    const r = await api({ action: "codes", adminKey: k });
+    if (!r.ok) { $("msgAdmin").textContent = r.error || "Clave incorrecta."; return; }
+    claveAdmin = k; $("loginAdmin").hidden = true; $("panelAdmin").hidden = false;
+    pintarAdmin(r.codes, r.assigned);
+  } catch (e) { $("msgAdmin").textContent = "Error de conexión."; }
+};
+let ultimosCodigos = {};
+function pintarAdmin(codes, assigned) {
+  ultimosCodigos = codes; asignados = assigned; dibujar();
+  let h = "<tr><th>Silla</th><th>Código</th><th>Asignada a</th><th></th></tr>";
+  for (let i = 1; i <= TOTAL; i++) {
+    h += `<tr><td>${i}</td><td><b>${codes[i] || ""}</b></td><td>${assigned[i] || "—"}</td><td>${assigned[i] ? `<button class="link" data-lib="${i}">Liberar</button>` : ""}</td></tr>`;
+  }
+  $("tablaAdmin").innerHTML = h;
+  $("tablaAdmin").querySelectorAll("[data-lib]").forEach(b => b.onclick = async () => {
+    if (!confirm("¿Liberar la silla " + b.dataset.lib + "?")) return;
+    const r = await api({ action: "release", seat: +b.dataset.lib, adminKey: claveAdmin });
+    if (r.ok) pintarAdmin(ultimosCodigos, r.assigned);
+  });
+}
+$("copiarCodigos").onclick = () => {
+  const t = Object.entries(ultimosCodigos).map(([s, c]) => `Silla ${s}: ${c}`).join("\n");
+  navigator.clipboard.writeText(t).then(() => { $("copiarCodigos").textContent = "¡Copiado!"; setTimeout(() => $("copiarCodigos").textContent = "Copiar lista", 1500); });
+};
+
+/* ---------- Inicio ---------- */
+document.title = TITULO;
+document.querySelector("h1").textContent = TITULO;
+if (!API_URL) $("modo").hidden = false;
+(async () => {
+  try { const r = await api({ action: "state" }); if (r.ok) asignados = r.assigned; } catch (e) {}
+  dibujar();
+})();
+/* Actualiza cada 90 s, solo si la pestaña está visible (ahorra cuota de Google) */
+async function refrescar() {
+  if (document.hidden || $("dlgSilla").open || $("dlgAdmin").open) return;
+  try { const r = await api({ action: "state" }); if (r.ok) { asignados = r.assigned; dibujar(); } } catch (e) {}
+}
+setInterval(refrescar, 90000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refrescar(); });
+</script>
+</body>
+</html>
