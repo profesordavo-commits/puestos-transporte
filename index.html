@@ -3,16 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Asignación de puestos</title>
+<title>Asignaci贸n de puestos</title>
 <style>
   :root { --verde:#1d9e75; --verde-bg:#e1f5ee; --gris:#d3d1c7; --gris-t:#5f5e5a; --txt:#222; --borde:#c9c7bd; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   body { font-family: system-ui, sans-serif; margin:0; background:#f6f5f1; color:var(--txt); }
-  header { padding:16px; text-align:center; }
+  header { padding:16px 16px 4px; text-align:center; }
   h1 { font-size:20px; margin:0 0 4px; }
   header p { margin:0; font-size:14px; color:#666; }
   .modo { display:inline-block; margin-top:8px; font-size:12px; background:#faeeda; color:#633806; padding:3px 10px; border-radius:99px; }
+  .azar { max-width:340px; margin:14px auto 4px; padding:0 14px; text-align:center; }
+  .azar .grande { width:100%; padding:14px; font-size:17px; font-weight:600; background:var(--verde); color:#fff; border:none; border-radius:12px; cursor:pointer; }
+  .azar .grande:active { transform:scale(.98); }
+  .azar p { margin:8px 0 0; font-size:13px; color:#666; }
   .bus { max-width:340px; margin:12px auto; background:#fff; border:2px solid var(--borde); border-radius:28px; padding:16px 14px 18px; }
   .frente { text-align:center; font-size:12px; color:#888; margin-bottom:8px; }
   .fila { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:6px; }
@@ -23,7 +27,7 @@
   .silla:active { transform:scale(.96); }
   .leyenda { display:flex; gap:16px; justify-content:center; font-size:13px; margin:10px 0; }
   .leyenda i { display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:middle; margin-right:5px; }
-  .contador { text-align:center; font-size:14px; margin-bottom:8px; }
+  .contador { text-align:center; font-size:14px; margin:8px 0; }
   .acciones { text-align:center; padding-bottom:30px; }
   button.link { background:none; border:none; color:#185fa5; text-decoration:underline; cursor:pointer; font-size:14px; }
   dialog { border:none; border-radius:14px; padding:20px; width:min(92vw,340px); box-shadow:0 8px 30px rgba(0,0,0,.25); }
@@ -37,6 +41,9 @@
   .btns button:disabled { opacity:.5; }
   .msg { font-size:13px; margin-top:10px; min-height:18px; color:#a32d2d; }
   .msg.bien { color:#0f6e56; }
+  .resultado { text-align:center; margin:14px 0 4px; }
+  .resultado .num { font-size:56px; font-weight:700; color:var(--verde); line-height:1; }
+  .resultado .sub { font-size:14px; color:#555; margin-top:4px; }
   table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
   td, th { border-bottom:1px solid #eee; padding:5px 4px; text-align:left; }
   .admin-box { max-height:60vh; overflow:auto; }
@@ -46,10 +53,15 @@
 <body>
 
 <header>
-  <h1>Asignación de puestos</h1>
-  <p>Toca una silla libre e ingresa tu nombre y tu código personal.</p>
+  <h1>Asignaci贸n de puestos</h1>
+  <p>Elige la forma de obtener tu silla.</p>
   <span class="modo" id="modo" hidden>Modo de prueba: los datos solo se guardan en este dispositivo</span>
 </header>
+
+<div class="azar">
+  <button class="grande" id="btnAzar">馃幉 Asignarme una silla al azar</button>
+  <p>驴Ya tienes un c贸digo? Toca tu silla en el plano.</p>
+</div>
 
 <div class="contador" id="contador"></div>
 <div class="bus" id="bus"></div>
@@ -59,13 +71,14 @@
 </div>
 <div class="acciones"><button class="link" id="btnAdmin">Administrador</button></div>
 
+<!-- Silla espec铆fica con c贸digo -->
 <dialog id="dlgSilla">
   <h2 id="tituloSilla"></h2>
   <div id="formSilla">
     <label for="nombre">Nombre y apellido</label>
     <input id="nombre" autocomplete="off">
-    <label for="codigo">Código de desbloqueo</label>
-    <input id="codigo" autocomplete="off" autocapitalize="characters">
+    <label for="codigo">C贸digo de desbloqueo</label>
+    <input id="codigo" autocomplete="off" autocapitalize="none">
   </div>
   <div class="msg" id="msgSilla"></div>
   <div class="btns">
@@ -74,6 +87,29 @@
   </div>
 </dialog>
 
+<!-- Silla al azar -->
+<dialog id="dlgAzar">
+  <h2>Silla al azar</h2>
+  <div id="formAzar">
+    <label for="nombreAzar">Nombre y apellido</label>
+    <input id="nombreAzar" autocomplete="off">
+    <div id="campoClave" hidden>
+      <label for="claveAzar">Clave general</label>
+      <input id="claveAzar" autocomplete="off" autocapitalize="none">
+    </div>
+  </div>
+  <div class="resultado" id="resultadoAzar" hidden>
+    <div class="num" id="numAzar"></div>
+    <div class="sub" id="subAzar"></div>
+  </div>
+  <div class="msg" id="msgAzar"></div>
+  <div class="btns">
+    <button id="cerrarAzar">Cerrar</button>
+    <button class="ok" id="okAzar">Sortear mi silla</button>
+  </div>
+</dialog>
+
+<!-- Administrador -->
 <dialog id="dlgAdmin" class="ancho">
   <h2>Administrador</h2>
   <div id="loginAdmin">
@@ -86,7 +122,7 @@
     </div>
   </div>
   <div id="panelAdmin" hidden>
-    <p style="font-size:13px;color:#666;margin:0">Códigos de cada silla. Envía a cada persona solo el suyo.</p>
+    <p style="font-size:13px;color:#666;margin:0">C贸digos de cada silla. Env铆a a cada persona solo el suyo. 馃敀 = no entra al sorteo (solo con c贸digo).</p>
     <div class="admin-box"><table id="tablaAdmin"></table></div>
     <div class="btns">
       <button id="copiarCodigos">Copiar lista</button>
@@ -96,18 +132,21 @@
 </dialog>
 
 <script>
-/* ============ CONFIGURACIÓN ============
-   Pega aquí la URL de tu Apps Script publicado (termina en /exec).
-   Si la dejas vacía, la página funciona en MODO DE PRUEBA (solo en este navegador):
-   código de silla = "demo", clave de administrador = "admin". */
+/* ============ CONFIGURACI脫N ============
+   Pega aqu铆 la URL de tu Apps Script publicado (termina en /exec).
+   Si la dejas vac铆a, la p谩gina funciona en MODO DE PRUEBA (solo en este navegador):
+   c贸digo de silla = "demo", clave de administrador = "admin", sillas 1-4 reservadas. */
 const API_URL = "https://script.google.com/macros/s/AKfycbz_ZWnPbwmvd2cnqlWtaX7LdDsgfJrVj6ax4kRlUs4fkwo6NXgRXSOa7P103p7a1Ha-/exec";
-const TITULO = "Asignación de puestos";
+const TITULO = "Asignaci贸n de puestos";
 /* ======================================= */
 
 const FILAS = 8, TOTAL = 37;
 let asignados = {};
 let claveAdmin = null;
 let sillaActual = null;
+let requiereClave = false;
+const $ = id => document.getElementById(id);
+const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
 
 /* ---------- Capa de datos ---------- */
 async function api(payload) {
@@ -118,27 +157,40 @@ async function api(payload) {
   return demo(payload);
 }
 function demo(p) {
+  const RESERVADAS = [1, 2, 3, 4];
   const leer = () => JSON.parse(localStorage.getItem("puestos_demo") || "{}");
   const guardar = d => localStorage.setItem("puestos_demo", JSON.stringify(d));
   const d = leer();
-  if (p.action === "state") return { ok: true, assigned: d };
+  if (p.action === "state") return { ok: true, assigned: d, claveAleatoria: false };
+  if (p.action === "random") {
+    const n = norm(p.name || "");
+    if (n.length < 3) return { ok: false, error: "Escribe tu nombre y apellido." };
+    const ya = Object.keys(d).find(s => norm(d[s]) === n);
+    if (ya) return { ok: false, error: "Ya tienes la silla " + ya + " asignada.", assigned: d };
+    const libres = [];
+    for (let i = 1; i <= TOTAL; i++) if (!d[i] && !RESERVADAS.includes(i)) libres.push(i);
+    if (!libres.length) return { ok: false, error: "Ya no quedan sillas disponibles por sorteo. Si tienes un c贸digo, elige tu silla en el plano.", assigned: d };
+    const seat = libres[Math.floor(Math.random() * libres.length)];
+    d[seat] = p.name.trim(); guardar(d);
+    return { ok: true, seat, assigned: d };
+  }
   if (p.action === "claim") {
     if (d[p.seat]) return { ok: false, error: "Esa silla ya fue asignada." };
-    if (String(p.code).trim().toLowerCase() !== "demo") return { ok: false, error: "Código incorrecto." };
+    if (norm(p.code) !== "demo") return { ok: false, error: "C贸digo incorrecto." };
     d[p.seat] = p.name; guardar(d); return { ok: true, assigned: d };
   }
   if (p.adminKey !== "admin") return { ok: false, error: "Clave incorrecta." };
   if (p.action === "codes") {
     const codes = {}; for (let i = 1; i <= TOTAL; i++) codes[i] = "demo";
-    return { ok: true, codes, assigned: d };
+    return { ok: true, codes, assigned: d, reservadas: RESERVADAS };
   }
   if (p.action === "release") { delete d[p.seat]; guardar(d); return { ok: true, assigned: d }; }
-  return { ok: false, error: "Acción no válida." };
+  return { ok: false, error: "Acci贸n no v谩lida." };
 }
 
 /* ---------- Dibujo del bus ---------- */
 function dibujar() {
-  const bus = document.getElementById("bus");
+  const bus = $("bus");
   let h = '<div class="frente">Frente</div>';
   h += '<div class="fila"><div class="pieza">Cond.</div><div></div><div></div><div class="pieza puerta">Puerta</div></div>';
   const silla = n => `<button class="silla ${asignados[n] ? "ocupada" : ""}" data-n="${n}">${n}</button>`;
@@ -150,11 +202,43 @@ function dibujar() {
   bus.innerHTML = h;
   bus.querySelectorAll(".silla").forEach(b => b.onclick = () => abrirSilla(+b.dataset.n));
   const ocup = Object.keys(asignados).length;
-  document.getElementById("contador").textContent = `${ocup} de ${TOTAL} sillas asignadas · ${TOTAL - ocup} libres`;
+  $("contador").textContent = `${ocup} de ${TOTAL} sillas asignadas 路 ${TOTAL - ocup} libres`;
 }
 
-/* ---------- Diálogo de silla ---------- */
-const $ = id => document.getElementById(id);
+/* ---------- Opci贸n 1: silla al azar ---------- */
+$("btnAzar").onclick = () => {
+  $("nombreAzar").value = ""; $("claveAzar").value = "";
+  $("campoClave").hidden = !requiereClave;
+  $("formAzar").hidden = false; $("resultadoAzar").hidden = true;
+  $("okAzar").hidden = false; $("okAzar").disabled = false;
+  $("cerrarAzar").textContent = "Cerrar";
+  $("msgAzar").textContent = ""; $("msgAzar").className = "msg";
+  $("dlgAzar").showModal();
+};
+$("cerrarAzar").onclick = () => $("dlgAzar").close();
+$("okAzar").onclick = async () => {
+  const name = $("nombreAzar").value.trim(), msg = $("msgAzar");
+  if (name.length < 3) { msg.className = "msg"; msg.textContent = "Escribe tu nombre y apellido."; return; }
+  $("okAzar").disabled = true; msg.className = "msg"; msg.textContent = "Sorteando...";
+  try {
+    const r = await api({ action: "random", name, key: $("claveAzar").value.trim() });
+    if (r.ok) {
+      asignados = r.assigned; dibujar();
+      $("formAzar").hidden = true; $("okAzar").hidden = true;
+      $("numAzar").textContent = r.seat;
+      $("subAzar").textContent = "Tu silla es la " + r.seat + ", " + name + ". 隆An贸tala o toma una captura!";
+      $("resultadoAzar").hidden = false;
+      $("cerrarAzar").textContent = "Listo";
+      msg.textContent = "";
+    } else {
+      msg.textContent = r.error || "No se pudo asignar.";
+      if (r.assigned) { asignados = r.assigned; dibujar(); }
+      $("okAzar").disabled = false;
+    }
+  } catch (e) { msg.textContent = "Error de conexi贸n. Intenta de nuevo."; $("okAzar").disabled = false; }
+};
+
+/* ---------- Opci贸n 2: silla espec铆fica con c贸digo ---------- */
 function abrirSilla(n) {
   sillaActual = n;
   $("tituloSilla").textContent = "Silla " + n;
@@ -171,16 +255,16 @@ $("okSilla").onclick = async () => {
   const name = $("nombre").value.trim(), code = $("codigo").value.trim();
   const msg = $("msgSilla");
   if (name.length < 3) { msg.textContent = "Escribe tu nombre y apellido."; return; }
-  if (!code) { msg.textContent = "Ingresa tu código."; return; }
+  if (!code) { msg.textContent = "Ingresa tu c贸digo."; return; }
   $("okSilla").disabled = true; msg.className = "msg"; msg.textContent = "Verificando...";
   try {
     const r = await api({ action: "claim", seat: sillaActual, name, code });
     if (r.ok) {
       asignados = r.assigned; dibujar();
-      msg.className = "msg bien"; msg.textContent = "¡Listo! Silla " + sillaActual + " asignada a " + name + ".";
+      msg.className = "msg bien"; msg.textContent = "隆Listo! Silla " + sillaActual + " asignada a " + name + ".";
       setTimeout(() => $("dlgSilla").close(), 1400);
     } else { msg.textContent = r.error || "No se pudo asignar."; if (r.assigned) { asignados = r.assigned; dibujar(); } }
-  } catch (e) { msg.textContent = "Error de conexión. Intenta de nuevo."; }
+  } catch (e) { msg.textContent = "Error de conexi贸n. Intenta de nuevo."; }
   $("okSilla").disabled = false;
 };
 
@@ -197,40 +281,47 @@ $("entrarAdmin").onclick = async () => {
     const r = await api({ action: "codes", adminKey: k });
     if (!r.ok) { $("msgAdmin").textContent = r.error || "Clave incorrecta."; return; }
     claveAdmin = k; $("loginAdmin").hidden = true; $("panelAdmin").hidden = false;
-    pintarAdmin(r.codes, r.assigned);
-  } catch (e) { $("msgAdmin").textContent = "Error de conexión."; }
+    pintarAdmin(r.codes, r.assigned, r.reservadas || []);
+  } catch (e) { $("msgAdmin").textContent = "Error de conexi贸n."; }
 };
-let ultimosCodigos = {};
-function pintarAdmin(codes, assigned) {
-  ultimosCodigos = codes; asignados = assigned; dibujar();
-  let h = "<tr><th>Silla</th><th>Código</th><th>Asignada a</th><th></th></tr>";
+let ultimosCodigos = {}, ultimasReservadas = [];
+function pintarAdmin(codes, assigned, reservadas) {
+  ultimosCodigos = codes; ultimasReservadas = reservadas; asignados = assigned; dibujar();
+  let h = "<tr><th>Silla</th><th>C贸digo</th><th>Asignada a</th><th></th></tr>";
   for (let i = 1; i <= TOTAL; i++) {
-    h += `<tr><td>${i}</td><td><b>${codes[i] || ""}</b></td><td>${assigned[i] || "—"}</td><td>${assigned[i] ? `<button class="link" data-lib="${i}">Liberar</button>` : ""}</td></tr>`;
+    const cand = reservadas.includes(i) ? " 馃敀" : "";
+    h += `<tr><td>${i}${cand}</td><td><b>${codes[i] || ""}</b></td><td>${assigned[i] || "鈥?}</td><td>${assigned[i] ? `<button class="link" data-lib="${i}">Liberar</button>` : ""}</td></tr>`;
   }
   $("tablaAdmin").innerHTML = h;
   $("tablaAdmin").querySelectorAll("[data-lib]").forEach(b => b.onclick = async () => {
-    if (!confirm("¿Liberar la silla " + b.dataset.lib + "?")) return;
+    if (!confirm("驴Liberar la silla " + b.dataset.lib + "?")) return;
     const r = await api({ action: "release", seat: +b.dataset.lib, adminKey: claveAdmin });
-    if (r.ok) pintarAdmin(ultimosCodigos, r.assigned);
+    if (r.ok) pintarAdmin(ultimosCodigos, r.assigned, ultimasReservadas);
   });
 }
 $("copiarCodigos").onclick = () => {
   const t = Object.entries(ultimosCodigos).map(([s, c]) => `Silla ${s}: ${c}`).join("\n");
-  navigator.clipboard.writeText(t).then(() => { $("copiarCodigos").textContent = "¡Copiado!"; setTimeout(() => $("copiarCodigos").textContent = "Copiar lista", 1500); });
+  navigator.clipboard.writeText(t).then(() => { $("copiarCodigos").textContent = "隆Copiado!"; setTimeout(() => $("copiarCodigos").textContent = "Copiar lista", 1500); });
 };
 
-/* ---------- Inicio ---------- */
+/* ---------- Inicio y actualizaci贸n ---------- */
 document.title = TITULO;
 document.querySelector("h1").textContent = TITULO;
 if (!API_URL) $("modo").hidden = false;
-(async () => {
-  try { const r = await api({ action: "state" }); if (r.ok) asignados = r.assigned; } catch (e) {}
-  dibujar();
-})();
-/* Actualiza cada 90 s, solo si la pestaña está visible (ahorra cuota de Google) */
-async function refrescar() {
-  if (document.hidden || $("dlgSilla").open || $("dlgAdmin").open) return;
-  try { const r = await api({ action: "state" }); if (r.ok) { asignados = r.assigned; dibujar(); } } catch (e) {}
+
+async function cargar() {
+  try {
+    const r = await api({ action: "state" });
+    if (r.ok) { asignados = r.assigned; requiereClave = !!r.claveAleatoria; dibujar(); }
+  } catch (e) {}
+}
+dibujar();
+cargar();
+
+/* Actualiza cada 90 s, solo si la pesta帽a est谩 visible (ahorra cuota de Google) */
+function refrescar() {
+  if (document.hidden || $("dlgSilla").open || $("dlgAzar").open || $("dlgAdmin").open) return;
+  cargar();
 }
 setInterval(refrescar, 90000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) refrescar(); });
