@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Asignaci贸n de puestos</title>
+<title>Asignaci&#243;n de puestos</title>
 <style>
   :root { --verde:#1d9e75; --verde-bg:#e1f5ee; --gris:#d3d1c7; --gris-t:#5f5e5a; --txt:#222; --borde:#c9c7bd; }
   * { box-sizing: border-box; }
@@ -53,14 +53,14 @@
 <body>
 
 <header>
-  <h1>Asignaci贸n de puestos</h1>
+  <h1>Asignaci&#243;n de puestos</h1>
   <p>Elige la forma de obtener tu silla.</p>
   <span class="modo" id="modo" hidden>Modo de prueba: los datos solo se guardan en este dispositivo</span>
 </header>
 
 <div class="azar">
-  <button class="grande" id="btnAzar">馃幉 Asignarme una silla al azar</button>
-  <p>驴Ya tienes un c贸digo? Toca tu silla en el plano.</p>
+  <button class="grande" id="btnAzar">&#127922; Asignarme una silla al azar</button>
+  <p>&#191;Ya tienes un c&#243;digo? Toca tu silla en el plano.</p>
 </div>
 
 <div class="contador" id="contador"></div>
@@ -71,13 +71,13 @@
 </div>
 <div class="acciones"><button class="link" id="btnAdmin">Administrador</button></div>
 
-<!-- Silla espec铆fica con c贸digo -->
+<!-- Silla espec&#237;fica con c&#243;digo -->
 <dialog id="dlgSilla">
   <h2 id="tituloSilla"></h2>
   <div id="formSilla">
     <label for="nombre">Nombre y apellido</label>
     <input id="nombre" autocomplete="off">
-    <label for="codigo">C贸digo de desbloqueo</label>
+    <label for="codigo">C&#243;digo de desbloqueo</label>
     <input id="codigo" autocomplete="off" autocapitalize="none">
   </div>
   <div class="msg" id="msgSilla"></div>
@@ -122,7 +122,7 @@
     </div>
   </div>
   <div id="panelAdmin" hidden>
-    <p style="font-size:13px;color:#666;margin:0">C贸digos de cada silla. Env铆a a cada persona solo el suyo. 馃敀 = no entra al sorteo (solo con c贸digo).</p>
+    <p style="font-size:13px;color:#666;margin:0">C&#243;digos de cada silla. Env&#237;a a cada persona solo el suyo. &#128274; = no entra al sorteo (solo con c&#243;digo).</p>
     <div class="admin-box"><table id="tablaAdmin"></table></div>
     <div class="btns">
       <button id="copiarCodigos">Copiar lista</button>
@@ -132,12 +132,12 @@
 </dialog>
 
 <script>
-/* ============ CONFIGURACI脫N ============
-   Pega aqu铆 la URL de tu Apps Script publicado (termina en /exec).
-   Si la dejas vac铆a, la p谩gina funciona en MODO DE PRUEBA (solo en este navegador):
-   c贸digo de silla = "demo", clave de administrador = "admin", sillas 1-4 reservadas. */
+/* ============ CONFIGURACI\u00d3N ============
+   Pega aqu\u00ed la URL de tu Apps Script publicado (termina en /exec).
+   Si la dejas vac\u00eda, la p\u00e1gina funciona en MODO DE PRUEBA (solo en este navegador):
+   c\u00f3digo de silla = "demo", clave de administrador = "admin", sillas 1-4 reservadas. */
 const API_URL = "https://script.google.com/macros/s/AKfycbz_ZWnPbwmvd2cnqlWtaX7LdDsgfJrVj6ax4kRlUs4fkwo6NXgRXSOa7P103p7a1Ha-/exec";
-const TITULO = "Asignaci贸n de puestos";
+const TITULO = "Asignaci\u00f3n de puestos";
 /* ======================================= */
 
 const FILAS = 8, TOTAL = 37;
@@ -169,14 +169,14 @@ function demo(p) {
     if (ya) return { ok: false, error: "Ya tienes la silla " + ya + " asignada.", assigned: d };
     const libres = [];
     for (let i = 1; i <= TOTAL; i++) if (!d[i] && !RESERVADAS.includes(i)) libres.push(i);
-    if (!libres.length) return { ok: false, error: "Ya no quedan sillas disponibles por sorteo. Si tienes un c贸digo, elige tu silla en el plano.", assigned: d };
+    if (!libres.length) return { ok: false, error: "Ya no quedan sillas disponibles por sorteo. Si tienes un c\u00f3digo, elige tu silla en el plano.", assigned: d };
     const seat = libres[Math.floor(Math.random() * libres.length)];
     d[seat] = p.name.trim(); guardar(d);
     return { ok: true, seat, assigned: d };
   }
   if (p.action === "claim") {
     if (d[p.seat]) return { ok: false, error: "Esa silla ya fue asignada." };
-    if (norm(p.code) !== "demo") return { ok: false, error: "C贸digo incorrecto." };
+    if (norm(p.code) !== "demo") return { ok: false, error: "C\u00f3digo incorrecto." };
     d[p.seat] = p.name; guardar(d); return { ok: true, assigned: d };
   }
   if (p.adminKey !== "admin") return { ok: false, error: "Clave incorrecta." };
@@ -185,7 +185,7 @@ function demo(p) {
     return { ok: true, codes, assigned: d, reservadas: RESERVADAS };
   }
   if (p.action === "release") { delete d[p.seat]; guardar(d); return { ok: true, assigned: d }; }
-  return { ok: false, error: "Acci贸n no v谩lida." };
+  return { ok: false, error: "Acci\u00f3n no v\u00e1lida." };
 }
 
 /* ---------- Dibujo del bus ---------- */
@@ -202,10 +202,10 @@ function dibujar() {
   bus.innerHTML = h;
   bus.querySelectorAll(".silla").forEach(b => b.onclick = () => abrirSilla(+b.dataset.n));
   const ocup = Object.keys(asignados).length;
-  $("contador").textContent = `${ocup} de ${TOTAL} sillas asignadas 路 ${TOTAL - ocup} libres`;
+  $("contador").textContent = `${ocup} de ${TOTAL} sillas asignadas \u00b7 ${TOTAL - ocup} libres`;
 }
 
-/* ---------- Opci贸n 1: silla al azar ---------- */
+/* ---------- Opci\u00f3n 1: silla al azar ---------- */
 $("btnAzar").onclick = () => {
   $("nombreAzar").value = ""; $("claveAzar").value = "";
   $("campoClave").hidden = !requiereClave;
@@ -226,7 +226,7 @@ $("okAzar").onclick = async () => {
       asignados = r.assigned; dibujar();
       $("formAzar").hidden = true; $("okAzar").hidden = true;
       $("numAzar").textContent = r.seat;
-      $("subAzar").textContent = "Tu silla es la " + r.seat + ", " + name + ". 隆An贸tala o toma una captura!";
+      $("subAzar").textContent = "Tu silla es la " + r.seat + ", " + name + ". \u00a1An\u00f3tala o toma una captura!";
       $("resultadoAzar").hidden = false;
       $("cerrarAzar").textContent = "Listo";
       msg.textContent = "";
@@ -235,10 +235,10 @@ $("okAzar").onclick = async () => {
       if (r.assigned) { asignados = r.assigned; dibujar(); }
       $("okAzar").disabled = false;
     }
-  } catch (e) { msg.textContent = "Error de conexi贸n. Intenta de nuevo."; $("okAzar").disabled = false; }
+  } catch (e) { msg.textContent = "Error de conexi\u00f3n. Intenta de nuevo."; $("okAzar").disabled = false; }
 };
 
-/* ---------- Opci贸n 2: silla espec铆fica con c贸digo ---------- */
+/* ---------- Opci\u00f3n 2: silla espec\u00edfica con c\u00f3digo ---------- */
 function abrirSilla(n) {
   sillaActual = n;
   $("tituloSilla").textContent = "Silla " + n;
@@ -255,16 +255,16 @@ $("okSilla").onclick = async () => {
   const name = $("nombre").value.trim(), code = $("codigo").value.trim();
   const msg = $("msgSilla");
   if (name.length < 3) { msg.textContent = "Escribe tu nombre y apellido."; return; }
-  if (!code) { msg.textContent = "Ingresa tu c贸digo."; return; }
+  if (!code) { msg.textContent = "Ingresa tu c\u00f3digo."; return; }
   $("okSilla").disabled = true; msg.className = "msg"; msg.textContent = "Verificando...";
   try {
     const r = await api({ action: "claim", seat: sillaActual, name, code });
     if (r.ok) {
       asignados = r.assigned; dibujar();
-      msg.className = "msg bien"; msg.textContent = "隆Listo! Silla " + sillaActual + " asignada a " + name + ".";
+      msg.className = "msg bien"; msg.textContent = "\u00a1Listo! Silla " + sillaActual + " asignada a " + name + ".";
       setTimeout(() => $("dlgSilla").close(), 1400);
     } else { msg.textContent = r.error || "No se pudo asignar."; if (r.assigned) { asignados = r.assigned; dibujar(); } }
-  } catch (e) { msg.textContent = "Error de conexi贸n. Intenta de nuevo."; }
+  } catch (e) { msg.textContent = "Error de conexi\u00f3n. Intenta de nuevo."; }
   $("okSilla").disabled = false;
 };
 
@@ -282,29 +282,29 @@ $("entrarAdmin").onclick = async () => {
     if (!r.ok) { $("msgAdmin").textContent = r.error || "Clave incorrecta."; return; }
     claveAdmin = k; $("loginAdmin").hidden = true; $("panelAdmin").hidden = false;
     pintarAdmin(r.codes, r.assigned, r.reservadas || []);
-  } catch (e) { $("msgAdmin").textContent = "Error de conexi贸n."; }
+  } catch (e) { $("msgAdmin").textContent = "Error de conexi\u00f3n."; }
 };
 let ultimosCodigos = {}, ultimasReservadas = [];
 function pintarAdmin(codes, assigned, reservadas) {
   ultimosCodigos = codes; ultimasReservadas = reservadas; asignados = assigned; dibujar();
-  let h = "<tr><th>Silla</th><th>C贸digo</th><th>Asignada a</th><th></th></tr>";
+  let h = "<tr><th>Silla</th><th>C\u00f3digo</th><th>Asignada a</th><th></th></tr>";
   for (let i = 1; i <= TOTAL; i++) {
-    const cand = reservadas.includes(i) ? " 馃敀" : "";
-    h += `<tr><td>${i}${cand}</td><td><b>${codes[i] || ""}</b></td><td>${assigned[i] || "鈥?}</td><td>${assigned[i] ? `<button class="link" data-lib="${i}">Liberar</button>` : ""}</td></tr>`;
+    const cand = reservadas.includes(i) ? " \ud83d\udd12" : "";
+    h += `<tr><td>${i}${cand}</td><td><b>${codes[i] || ""}</b></td><td>${assigned[i] || "\u2014"}</td><td>${assigned[i] ? `<button class="link" data-lib="${i}">Liberar</button>` : ""}</td></tr>`;
   }
   $("tablaAdmin").innerHTML = h;
   $("tablaAdmin").querySelectorAll("[data-lib]").forEach(b => b.onclick = async () => {
-    if (!confirm("驴Liberar la silla " + b.dataset.lib + "?")) return;
+    if (!confirm("\u00bfLiberar la silla " + b.dataset.lib + "?")) return;
     const r = await api({ action: "release", seat: +b.dataset.lib, adminKey: claveAdmin });
     if (r.ok) pintarAdmin(ultimosCodigos, r.assigned, ultimasReservadas);
   });
 }
 $("copiarCodigos").onclick = () => {
   const t = Object.entries(ultimosCodigos).map(([s, c]) => `Silla ${s}: ${c}`).join("\n");
-  navigator.clipboard.writeText(t).then(() => { $("copiarCodigos").textContent = "隆Copiado!"; setTimeout(() => $("copiarCodigos").textContent = "Copiar lista", 1500); });
+  navigator.clipboard.writeText(t).then(() => { $("copiarCodigos").textContent = "\u00a1Copiado!"; setTimeout(() => $("copiarCodigos").textContent = "Copiar lista", 1500); });
 };
 
-/* ---------- Inicio y actualizaci贸n ---------- */
+/* ---------- Inicio y actualizaci\u00f3n ---------- */
 document.title = TITULO;
 document.querySelector("h1").textContent = TITULO;
 if (!API_URL) $("modo").hidden = false;
@@ -318,7 +318,7 @@ async function cargar() {
 dibujar();
 cargar();
 
-/* Actualiza cada 90 s, solo si la pesta帽a est谩 visible (ahorra cuota de Google) */
+/* Actualiza cada 90 s, solo si la pesta\u00f1a est\u00e1 visible (ahorra cuota de Google) */
 function refrescar() {
   if (document.hidden || $("dlgSilla").open || $("dlgAzar").open || $("dlgAdmin").open) return;
   cargar();
